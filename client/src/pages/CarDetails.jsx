@@ -6,6 +6,13 @@ import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
 
 function CarDetails() {
   const { id } = useParams();
@@ -110,6 +117,24 @@ function CarDetails() {
 
   if (!car) return <Loader />;
 
+  // =========================
+  // PRICE CALCULATION
+  // =========================
+  const calculateDays = () => {
+    if (!pickupDate || !returnDate) return 0;
+
+    const start = new Date(pickupDate);
+    const end = new Date(returnDate);
+
+    const diffTime = end - start;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays > 0 ? diffDays : 0;
+  };
+
+  const totalDays = calculateDays();
+  const totalPrice = totalDays * car.pricePerDay;
+
   return (
     <div className="max-w-7xl mx-auto px-4">
       <button
@@ -123,11 +148,26 @@ function CarDetails() {
       <div className="flex flex-col lg:flex-row gap-10">
         {/* LEFT */}
         <div className="flex-1 max-w-4xl bg-white rounded-2xl shadow-md p-6">
-          <img
-            src={car.image}
-            alt=""
-            className="w-full h-72 object-cover rounded-xl shadow-md"
-          />
+          <Swiper
+  modules={[Navigation, Pagination]}
+  navigation
+  pagination={{ clickable: true }}
+  className="rounded-xl overflow-hidden shadow-md"
+>
+  {(car.images && car.images.length > 0
+    ? car.images
+    : [car.image] // fallback mobil lama
+  ).map((img, index) => (
+    <SwiperSlide key={index}>
+      <img
+        src={img}
+        alt={`car-${index}`}
+        className="w-full h-72 object-cover"
+      />
+    </SwiperSlide>
+  ))}
+</Swiper>
+
 
           <h1 className="text-3xl font-bold mt-6">
             {car.brand} {car.model}
@@ -192,9 +232,38 @@ function CarDetails() {
                   className="w-full px-3 py-2 rounded-lg border"
                 />
 
+                {/* PRICE BREAKDOWN */}
+                {totalDays > 0 && (
+                  <div>
+                    <label className="font-medium text-gray-700 mb-1 block mt-3">
+                      Price Breakdown
+                    </label>
+
+                    <div className="bg-transparent border border-black rounded-xl p-4 space-y-3 ">
+                      <div className="flex justify-between text-sm text-black">
+                        <span>
+                          {car.pricePerDay} × {totalDays} days
+                        </span>
+                        <span>
+                          {currency}
+                          {car.pricePerDay * totalDays}
+                        </span>
+                      </div>
+
+                      <div className="border-t pt-3 flex justify-between text-base font-bold text-black">
+                        <span>Total</span>
+                        <span className="text-blue-700">
+                          {currency}
+                          {totalPrice}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* PAYMENT METHOD */}
                 <div>
-                  <label className="font-medium text-gray-700 mb-2 block">
+                  <label className="font-medium text-gray-700 mb-2 block mt-3">
                     Payment Method
                   </label>
 
@@ -274,10 +343,6 @@ function CarDetails() {
               <button className="mt-2 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl">
                 Book Now
               </button>
-
-              <p className="text-sm text-gray-600 text-center">
-                ⭐ No credit card required
-              </p>
             </form>
           </div>
         </div>

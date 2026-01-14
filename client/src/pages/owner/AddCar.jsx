@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 const AddCar = () => {
   const { axios, currency } = useAppContext();
 
-  const [image, setImage] = useState(null);
+const [images, setImages] = useState([]);
   const [car, setCar] = useState({
     brand: "",
     model: "",
@@ -22,41 +22,55 @@ const AddCar = () => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const onSubmitHandler = async (e) => {
-    e.preventDefault();
-    if (isLoading) return null;
+const onSubmitHandler = async (e) => {
+  e.preventDefault();
+  if (isLoading) return;
 
-    setIsLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append("image", image);
-      formData.append("carData", JSON.stringify(car));
+  setIsLoading(true);
 
-      const { data } = await axios.post("/api/owner/add-car", formData);
-      if (data.success) {
-        toast.success(data.message);
-        setImage(null);
-        setCar({
-          brand: "",
-          model: "",
-          year: 0,
-          pricePerDay: 0,
-          category: "",
-          transmission: "",
-          fuel_type: "",
-          seating_capacity: 0,
-          location: "",
-          description: "",
-        });
-      }else{
-        toast.error(data.message)
-      }
-    } catch (error) {
-      toast.error(error.message)
-    }finally{
-      setIsLoading(false)
+  try {
+    if (images.length === 0) {
+      toast.error("Please upload car images");
+      setIsLoading(false);
+      return;
     }
-  };
+
+    const formData = new FormData();
+
+    images.forEach((img) => {
+      formData.append("images", img);
+    });
+
+    formData.append("carData", JSON.stringify(car));
+
+    const { data } = await axios.post("/api/owner/add-car", formData);
+
+    if (data.success) {
+      toast.success(data.message);
+      setImages([]);
+      setCar({
+        brand: "",
+        model: "",
+        year: 0,
+        pricePerDay: 0,
+        category: "",
+        transmission: "",
+        fuel_type: "",
+        seating_capacity: 0,
+        location: "",
+        description: "",
+      });
+    } else {
+      toast.error(data.message);
+    }
+  } catch (error) {
+    toast.error(error.response?.data?.message || error.message);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -70,32 +84,42 @@ const AddCar = () => {
         className="mt-6 bg-white rounded-2xl shadow-lg p-6 space-y-8"
       >
         {/* Upload Image */}
-        <div className="flex items-center gap-6">
-          <label
-            htmlFor="car-image"
-            className="w-32 h-32 rounded-xl border-2 border-dashed border-blue-400 flex items-center justify-center cursor-pointer hover:bg-blue-50 transition"
-          >
-            <img
-              src={image ? URL.createObjectURL(image) : assets.upload_icon}
-              alt="upload"
-              className="w-12"
-            />
-            <input
-              type="file"
-              id="car-image"
-              accept="image/*"
-              hidden
-              onChange={(e) => setImage(e.target.files[0])}
-            />
-          </label>
+       <div>
+  <p className="font-semibold text-gray-800 mb-2">
+    Car Images (Max 5)
+  </p>
 
-          <div>
-            <p className="font-semibold text-gray-800">Car Image</p>
-            <p className="text-sm text-gray-500">
-              Upload a clear photo of your car
-            </p>
-          </div>
-        </div>
+  <label
+    htmlFor="car-image"
+    className="border-2 border-dashed border-blue-400 rounded-xl p-6 flex flex-wrap gap-4 cursor-pointer hover:bg-blue-50 transition"
+  >
+    {images.length === 0 ? (
+      <img src={assets.upload_icon} className="w-12 mx-auto" />
+    ) : (
+      images.map((img, i) => (
+        <img
+          key={i}
+          src={URL.createObjectURL(img)}
+          className="w-28 h-20 object-cover rounded-lg"
+        />
+      ))
+    )}
+  </label>
+
+  <input
+    type="file"
+    id="car-image"
+    accept="image/*"
+    multiple
+    hidden
+    onChange={(e) => setImages([...e.target.files].slice(0, 5))}
+  />
+
+  <p className="text-sm text-gray-500 mt-2">
+    Upload up to 5 car photos
+  </p>
+</div>
+
 
         {/* Brand & Model */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

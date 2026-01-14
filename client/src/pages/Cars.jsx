@@ -36,20 +36,28 @@ const Cars = () => {
 
 
 
-  const searchCarAvailability = async () => {
+ const searchCarAvailability = async () => {
+  try {
     const { data } = await axios.post("/api/bookings/check-availability", {
       location: pickupLocation,
       pickupDate,
       returnDate,
     });
+
     if (data.success) {
-      setFilteredCars(data.availableCars);
-      if (data.availableCars.length === 0) {
+      // Ganti availableCars menjadi cars sesuai response backend
+      const availableList = data.cars || []; 
+      setFilteredCars(availableList);
+
+      if (availableList.length === 0) {
         toast("No Cars available");
       }
-      return null;
     }
-  };
+  } catch (error) {
+    console.error("Error:", error);
+    toast("Terjadi kesalahan saat mencari mobil");
+  }
+};
 
   useEffect(() => {
     if (isSearchData) {

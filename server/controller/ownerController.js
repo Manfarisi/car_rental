@@ -15,38 +15,52 @@ export const changeRoleToOwner = async (req,res)=>{
 }
 
 // api to list car
-export const addCar = async(req,res)=>{
-    try {
-        const {_id} = req.user
-        let car = JSON.parse(req.body.carData)
-        const imageFile = req.file
-        
-        // upluoad image to imagekit
-        const fileBuffer = fs.readFileSync(imageFile.path)
-        const response = await imagekit.upload({
-            file: fileBuffer,
-            fileName: imageFile.originalname,
-            folder: '/cars'
-        })
+export const addCar = async (req, res) => {
+  try {
+    const { _id } = req.user;
+    const car = JSON.parse(req.body.carData);
+    const imageFiles = req.files;
 
-        // optimization throught imagekit URL transformation
-        var optimizedImageUrl = imagekit.url({
-            path: response.filePath,
-            transformation : [
-                {width: '1280'},
-                {quality: 'auto'},
-                {format: 'webp'},
-            ]
-        })
-
-        const image = optimizedImageUrl
-        await Car.create({...car, owner: _id,image})
-        res.json({success: true, message: "car Added"})
-    } catch (error) {
-        console.log(error.message)
-        res.json({success:false,message: error.message})        
+    if (!imageFiles || imageFiles.length === 0) {
+      return res.json({ success: false, message: "Images required" });
     }
-}
+
+    const uploadedImages = [];
+
+    for (const file of imageFiles) {
+      const fileBuffer = fs.readFileSync(file.path);
+
+      const response = await imagekit.upload({
+        file: fileBuffer,
+        fileName: file.originalname,
+        folder: "/cars",
+      });
+
+      const optimizedImageUrl = imagekit.url({
+        path: response.filePath,
+        transformation: [
+          { width: "1280" },
+          { quality: "auto" },
+          { format: "webp" },
+        ],
+      });
+
+      uploadedImages.push(optimizedImageUrl);
+    }
+
+    await Car.create({
+      ...car,
+      owner: _id,
+      images: uploadedImages,
+    });
+
+    res.json({ success: true, message: "Car added successfully" });
+  } catch (error) {
+    console.log(error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
+
 
 // api to list owner cars
 export const getOwnerCars = async (req,res)=>{
