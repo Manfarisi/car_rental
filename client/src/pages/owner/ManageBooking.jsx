@@ -76,7 +76,7 @@ const ManageBooking = () => {
                 <td className="px-8 py-6">
                   <div className="flex items-center gap-5">
                     <img
-                      src={booking.car.image}
+                      src={booking.car.images[0] || assets.placeholder_car}
                       alt={booking.car.model}
                       className="w-28 h-20 rounded-xl object-cover border shadow-sm"
                     />

@@ -223,3 +223,40 @@ export const changeBookingStatus = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+// api to cancel booking (USER)
+export const cancelBooking = async (req, res) => {
+  try {
+    const { _id } = req.user;
+    const { bookingId } = req.params;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.json({ success: false, message: "Booking not found" });
+    }
+
+    if (booking.user.toString() !== _id.toString()) {
+      return res.json({ success: false, message: "Unauthorized" });
+    }
+
+    if (booking.status === "Cancelled") {
+      return res.json({ success: false, message: "Already cancelled" });
+    }
+
+    if (new Date(booking.pickupDate) <= new Date()) {
+      return res.json({ success: false, message: "Pickup date already passed" });
+    }
+
+    booking.status = "Cancelled";
+    await booking.save();
+
+    await Car.findByIdAndUpdate(booking.car, {
+      isAvailable: true,
+    });
+
+    res.json({ success: true, message: "Booking cancelled" });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};

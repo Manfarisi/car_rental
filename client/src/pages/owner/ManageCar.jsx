@@ -3,10 +3,14 @@ import { assets } from "../../assets/assets";
 import Title from "../../components/Title";
 import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+
 
 const ManageCar = () => {
   const { isOwner, axios, currency } = useAppContext();
   const [cars, setCars] = useState([]);
+  const navigate = useNavigate();
+
 
   const fetchOwnerCars = async () => {
     try {
@@ -83,7 +87,7 @@ const ManageCar = () => {
                 <td className="px-8 py-6">
                   <div className="flex items-center gap-5">
                     <img
-                      src={car.image}
+                      src={car.images[0] || assets.placeholder_car}
                       alt={car.model}
                       className="w-28 h-20 rounded-xl object-cover border shadow-sm"
                     />
@@ -160,6 +164,23 @@ const ManageCar = () => {
                       />
                       <span>{car.isAvailable ? "Hide" : "Show"}</span>
                     </button>
+
+                    {/* Edit */}
+                    <button
+  onClick={() => navigate(`/owner/edit-car/${car._id}`)}
+  title="Edit car"
+  className="flex items-center gap-3 px-5 py-3 rounded-xl text-base font-semibold
+  bg-blue-100 text-blue-700 hover:bg-blue-200
+  transition-all shadow-sm hover:shadow-md hover:scale-105"
+>
+  <img
+    src={assets.edit_icon}
+    alt="edit"
+    className="w-7 h-7"
+  />
+  <span>Edit</span>
+</button>
+
 
                     {/* DELETE */}
                     <button

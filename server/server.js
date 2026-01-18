@@ -22,6 +22,8 @@ app.use('/api/user', userRouter)
 app.use('/api/owner', ownerRouter)
 app.use('/api/bookings', bookingRouter)
 
+app.use("/uploads", express.static("uploads"));
+
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT,()=>console.log(`Server is running on http://localhost:${PORT}`))

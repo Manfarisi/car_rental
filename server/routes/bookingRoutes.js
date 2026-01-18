@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  cancelBooking,
   changeBookingStatus,
   checkAvailabilityOfCar,
   createBooking,
@@ -16,5 +17,6 @@ bookingRouter.get("/user", protect, getUserBookings);
 bookingRouter.get("/booked-dates/:carId", getBookedDates);
 bookingRouter.get("/owner", protect, getOwnerBookings);
 bookingRouter.post("/change-status", protect, changeBookingStatus);
+bookingRouter.put("/cancel/:bookingId", protect, cancelBooking);
 
 export default bookingRouter;

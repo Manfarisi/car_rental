@@ -7,7 +7,6 @@ import toast from "react-hot-toast";
 const MyBookings = () => {
   const { axios, user, currency } = useAppContext();
   const [bookings, SetBookings] = useState([]);
-  
 
   const fetchMyBookings = async () => {
     try {
@@ -22,32 +21,55 @@ const MyBookings = () => {
     }
   };
   const statusConfig = (status) => {
-  switch (status) {
-    case "Confirmed":
-      return {
-        label: "✔ Confirmed",
-        className:
-          "bg-green-100 text-green-700 border border-green-300",
-      };
-    case "Cancelled":
-      return {
-        label: "✖ Cancelled",
-        className:
-          "bg-red-100 text-red-700 border border-red-300",
-      };
-    default: // Pending
-      return {
-        label: "⏳ Pending",
-        className:
-          "bg-yellow-100 text-yellow-700 border border-yellow-300",
-      };
+    switch (status) {
+      case "Confirmed":
+        return {
+          label: "✔ Confirmed",
+          className: "bg-green-100 text-green-700 border border-green-300",
+        };
+      case "Cancelled":
+        return {
+          label: "✖ Cancelled",
+          className: "bg-red-100 text-red-700 border border-red-300",
+        };
+      default: // Pending
+        return {
+          label: "⏳ Pending",
+          className: "bg-yellow-100 text-yellow-700 border border-yellow-300",
+        };
+    }
+  };
+
+  useEffect(() => {
+    user && fetchMyBookings();
+  }, [user]);
+
+  const canCancelBooking = (booking) => {
+  const pickupDate = new Date(booking.pickupDate);
+  const today = new Date();
+
+  return (
+    booking.status !== "Cancelled" &&
+    pickupDate > today
+  );
+};
+
+const handleCancelBooking = async (id) => {
+  if (!confirm("Are you sure you want to cancel this booking?")) return;
+
+  try {
+    const { data } = await axios.put(`/api/bookings/cancel/${id}`);
+    if (data.success) {
+      toast.success("Booking cancelled");
+      fetchMyBookings();
+    } else {
+      toast.error(data.message);
+    }
+  } catch (err) {
+    toast.error(err.message);
   }
 };
 
-
-  useEffect(() => {
-   user && fetchMyBookings();
-  }, [user]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -64,22 +86,21 @@ const MyBookings = () => {
             className="relative bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition p-6"
           >
             {/* STATUS BADGE */}
-<span
-  className={`absolute top-1 right-1 px-3 py-1 rounded-full text-xs font-semibold
+            <span
+              className={`absolute top-1 right-1 px-3 py-1 rounded-full text-xs font-semibold
     ${statusConfig(booking.status).className}`}
->
-  {statusConfig(booking.status).label}
-</span>
-
+            >
+              {statusConfig(booking.status).label}
+            </span>
 
             <div className="flex flex-col lg:flex-row gap-8">
               {/* LEFT – IMAGE & BASIC INFO */}
               <div className="flex gap-6 flex-1">
                 <div className="w-full sm:w-60 h-40 rounded-xl overflow-hidden bg-gray-100">
                   <img
-                    src={booking.car.image}
+                    src={booking.car.images[0] || assets.placeholder_car}
                     alt=""
-                    className="w-full h-full object-cover"
+                    className="w-full h-full ob ject-cover"
                   />
                 </div>
 
@@ -146,7 +167,17 @@ const MyBookings = () => {
                   <p className="text-xs text-gray-500">
                     Booked on {booking.createdAt.split("T")[0]}
                   </p>
-                </div>
+                 
+                
+                {canCancelBooking(booking) && (
+  <button
+    onClick={() => handleCancelBooking(booking._id)}
+    className="mt-3 px-4 py-2 text-sm rounded-lg border border-red-300 text-red-600 hover:bg-red-50 transition"
+  >
+    Cancel Booking
+  </button>
+)}
+</div>
               </div>
             </div>
           </div>
